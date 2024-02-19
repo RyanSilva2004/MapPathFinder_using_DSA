@@ -1,40 +1,38 @@
-# Flight Management System
+# PathFinder: Implementing Data Structures for Efficient Geolocation Services
 
-This project is a Flight Management System implemented using various data structures. The system provides the following features:
+## Project Description
+
+PathFinder is a software application that demonstrates the meaningful application of various data structures in real-world scenarios. The primary focus of this project is to implement a mapping and navigation system similar to Google Maps.
+
+## Data Structures Used
+
+The following data structures are used in this project:
+
+- *Graph*: Represents locations as nodes and roads as edges. Information like distance, traffic, and road conditions are stored on these edges.
+- *Heap: A min-heap is used in pathfinding algorithms like Dijkstra's or A to quickly get the next node with the shortest tentative distance.
+- *Trees (Binary Search Tree, AVL Tree, Red-Black Tree)*: Used to store map data like place names, street names, etc., allowing for fast lookup, addition, and removal of locations or streets.
+- *Doubly Linked List or Circularly Linked List*: Represents a specific route from one location to another, allowing easy movement forwards and backwards through the route.
 
 ## Features
 
-### Flight Scheduling
-- **Data Structure**: Min Heap
-- This feature schedules flights based on their departure times. A min heap is used to ensure that the flight with the earliest departure time can be found quickly. The heap is ordered by departure time, so the root of the heap always contains the next flight to depart.
-- **CLI Interaction**: The user can add a flight by entering the flight number, departure time, and destination. The system will then insert the flight into the heap. The user can also request the next flight, and the system will return and remove the flight with the earliest departure time from the heap.
-- **Inputs**: Flight number, departure time, destination.
-- **Outputs**: Confirmation of flight addition, details of the next flight.
+PathFinder provides the following features:
 
-### Seat Reservation
-- **Data Structure**: 2D Array
-- This feature handles seat reservations for each flight. A 2D array is used to represent the seating arrangement in the airplane (rows and columns), where each element in the array represents a seat.
-- **CLI Interaction**: The user can reserve a seat by entering the flight number and the desired seat. The system will then mark the corresponding element in the 2D array as reserved.
-- **Inputs**: Flight number, seat number.
-- **Outputs**: Confirmation of seat reservation.
+1. *Route Planning*: Users can input a start and end location, and the application provides the best route based on various factors.
+2. *Location Search*: Users can search for specific locations, such as addresses, landmarks, businesses, etc.
+3. *Turn-by-Turn Navigation*: Provides turn-by-turn navigation instructions to guide the user to their destination.
+4. *Traffic Information*: Displays real-time traffic information, helping users anticipate delays and find alternative routes when necessary.
+5. *Public Transit Information*: Provides information about public transit options, including routes, schedules, and estimated travel times.
+6. *Points of Interest*: Highlights points of interest, such as restaurants, parks, museums, etc., in the map view.
+7. *Offline Access*: Provides an option to download maps for offline use in areas with poor internet connectivity.
 
-### Passenger Information
-- **Data Structure**: Binary Search Tree
-- This feature stores and retrieves passenger information. A Binary Search Tree is used for this purpose, where the key is the passenger's ID and the value is an object containing the passenger's information. The BST allows for efficient search, insertion, and deletion operations, which are essential for managing passenger information.
-- **CLI Interaction**: The user can add a passenger by entering the passenger's ID and details. The system will then insert the passenger's information into the BST. The user can also request a passenger's details by entering the passenger's ID, and the system will search the BST for the passenger's information.
-- **Inputs**: Passenger ID, passenger details.
-- **Outputs**: Confirmation of passenger addition, requested passenger details.
+## Getting Started
 
-### Flight Search
-- **Data Structure**: Graph
-- This feature allows passengers to search for flights between two locations. A graph is used to represent the network of flights, where each node represents an airport and each edge represents a flight.
-- **CLI Interaction**: The user can search for a flight by entering the origin and destination. The system will then perform a search on the graph to find the shortest path.
-- **Inputs**: Origin, destination.
-- **Outputs**: Shortest path from origin to destination.
+(Include instructions on how to install and run your application here)
 
-### Baggage Tracking
-- **Data Structure**: Doubly Linked List
-- This feature tracks the movement of baggage from check-in to the airplane and then to baggage claim at the destination. A doubly linked list is used to represent this sequence of events, allowing for efficient updates and queries.
-- **CLI Interaction**: The user can add a baggage item by entering the baggage ID and the current location. The system will then add the baggage item to the doubly linked list. The user can also request the location of a baggage item by entering the baggage ID.
-- **Inputs**: Baggage ID, current location.
-- **Outputs**: Confirmation of baggage addition, requested baggage location.
+## Contributing
+
+(Include instructions for contributors here)
+
+## License
+
+(Include license information here)
