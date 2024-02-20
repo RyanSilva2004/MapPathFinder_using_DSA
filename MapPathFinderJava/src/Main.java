@@ -110,105 +110,144 @@ public class Main {
         return graph;
     }
 }
+class Node<T> implements Serializable{
+    T data;
+    Node<T> next;
 
+    Node(T data) {
+        this.data = data;
+    }
+}
+// Custom LinkedList implementation
+class MyLinkedList<T> implements Serializable {
+    Node<T> head;
 
+    void add(T data) {
+        Node<T> newNode = new Node<>(data);
+        if (head == null) {
+            head = newNode;
+        } else {
+            Node<T> current = head;
+            while (current.next != null) {
+                current = current.next;
+            }
+            current.next = newNode;
+        }
+    }
+
+    void remove(T data) {
+        if (head == null) return;
+
+        if (head.data.equals(data)) {
+            head = head.next;
+            return;
+        }
+
+        Node<T> current = head;
+        while (current.next != null) {
+            if (current.next.data.equals(data)) {
+                current.next = current.next.next;
+                return;
+            }
+            current = current.next;
+        }
+    }
+
+    boolean contains(T data) {
+        Node<T> current = head;
+        while (current != null) {
+            if (current.data.equals(data)) {
+                return true;
+            }
+            current = current.next;
+        }
+        return false;
+    }
+}
 
 // Map For Locations implemented using a Graph
-class LocationGraph implements Serializable
-{
+class LocationGraph implements Serializable {
     double[][] adjacencyMatrix;
-    ArrayList<City> cities;
+    MyLinkedList<City> cities; // Changed ArrayList to MyLinkedList
 
-    public LocationGraph(int numCities)
-    {
+    public LocationGraph(int numCities) {
         adjacencyMatrix = new double[numCities][numCities];
-        cities = new ArrayList<>();
-        for (int i = 0; i < numCities; i++)
-        {
-            for (int j = 0; j < numCities; j++)
-            {
-                if (i == j)
-                {
+        cities = new MyLinkedList<>(); // Changed ArrayList to MyLinkedList
+        for (int i = 0; i < numCities; i++) {
+            for (int j = 0; j < numCities; j++) {
+                if (i == j) {
                     adjacencyMatrix[i][j] = 0;
-                }
-                else
-                {
+                } else {
                     adjacencyMatrix[i][j] = Double.POSITIVE_INFINITY;
                 }
             }
         }
     }
 
-    public void removeCity(String cityId)
-    {
-        int index = findCityIndex(cityId);
-        if (index != -1)
-        {
-            // Create new adjacency matrix and cities list
-            double[][] newAdjacencyMatrix = new double[cities.size()][cities.size()];
-            ArrayList<City> newCities = new ArrayList<>();
-
-            // Copy over cities and distances, skipping the removed city
-            int newIndex = 0;
-            for (int i = 0; i < cities.size(); i++)
-            {
-                if (i == index) continue;  // Skip the removed city
-                newCities.add(cities.get(i));
-                int newColumnIndex = 0;
-                for (int j = 0; j < cities.size(); j++)
-                {
-                    if (j == index) continue;  // Skip the removed city
-                    newAdjacencyMatrix[newIndex][newColumnIndex] = adjacencyMatrix[i][j];
-                    newColumnIndex++;
+    public void removeCity(String cityId) {
+        Node<City> current = cities.head;
+        Node<City> prev = null;
+        while (current != null) {
+            if (current.data.city_id.equals(cityId)) {
+                if (prev == null) { // If the node to be removed is the head
+                    cities.head = current.next;
+                } else {
+                    prev.next = current.next;
                 }
-                newIndex++;
+                return;
             }
-
-            // Replace old adjacency matrix and cities list with new ones
-            adjacencyMatrix = newAdjacencyMatrix;
-            cities = newCities;
+            prev = current;
+            current = current.next;
         }
     }
 
-    public void addCity(City city)
-    {
+    public void addCity(City city) {
         cities.add(city);
     }
 
-    public void addPath(Path path)
-    {
+    public void addPath(Path path) {
         int index1 = findCityIndex(path.city1.city_id);
         int index2 = findCityIndex(path.city2.city_id);
-        if (index1 != -1 && index2 != -1)
-        {
+        if (index1 != -1 && index2 != -1) {
             adjacencyMatrix[index1][index2] = path.path_distance;
             adjacencyMatrix[index2][index1] = path.path_distance;
         }
     }
 
-    private int findCityIndex(String cityId)
-    {
-        for (int i = 0; i < cities.size(); i++)
-        {
-            if (cities.get(i).city_id.equals(cityId))
-            {
-                return i;
+    private int findCityIndex(String cityId) {
+        int index = 0;
+        Node<City> current = cities.head;
+        while (current != null) {
+            if (current.data.city_id.equals(cityId)) {
+                return index;
             }
+            current = current.next;
+            index++;
         }
         return -1;
     }
 
-    public void display()
-    {
-        for (int i = 0; i < cities.size(); i++)
-        {
-            for (int j = 0; j < cities.size(); j++)
-            {
-                System.out.print(adjacencyMatrix[i][j] + " ");
+    public void display() {
+        System.out.println("Cities:");
+        Node<City> current = cities.head;
+        while (current != null) {
+            System.out.println(current.data.city_id + ": " + current.data.city_name);
+            current = current.next;
+        }
+        System.out.println("Adjacency Matrix:");
+        for (int i = 0; i < adjacencyMatrix.length; i++) {
+            for (int j = 0; j < adjacencyMatrix[i].length; j++) {
+                if (adjacencyMatrix[i][j] == Double.POSITIVE_INFINITY) {
+                    System.out.print("Infinity ");
+                } else {
+                    System.out.print(adjacencyMatrix[i][j] + " ");
+                }
             }
             System.out.println();
         }
     }
+
+
 }
 
 class City implements Serializable
