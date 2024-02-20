@@ -1,38 +1,45 @@
 # PathFinder: Implementing Data Structures for Efficient Geolocation Services
 
-## Project Description
+### Features
 
-PathFinder is a software application that demonstrates the meaningful application of various data structures in real-world scenarios. The primary focus of this project is to implement a mapping and navigation system similar to Google Maps.
+1. **Add Cities:**
+   - Users can add cities to the map by providing a unique city ID and a city name.
 
-## Data Structures Used
+2. **Add Paths:**
+   - Connect cities with paths, specifying the distance between them. Users can also set the availability of the path.
 
-The following data structures are used in this project:
+3. **Display Graph:**
+   - Visualize the graph with cities and distances to understand the spatial layout.
 
-- *Graph*: Represents locations as nodes and roads as edges. Information like distance, traffic, and road conditions are stored on these edges.
-- *Heap: A min-heap is used in pathfinding algorithms like Dijkstra's or A to quickly get the next node with the shortest tentative distance.
-- *Trees (Binary Search Tree, AVL Tree, Red-Black Tree)*: Used to store map data like place names, street names, etc., allowing for fast lookup, addition, and removal of locations or streets.
-- *Doubly Linked List or Circularly Linked List*: Represents a specific route from one location to another, allowing easy movement forwards and backwards through the route.
+4. **Remove Cities:**
+   - Remove cities from the map, updating the graph accordingly.
 
-## Features
+5. **Find Shortest Path:**
+   - Utilizes Dijkstra's algorithm to find the shortest path between two cities. Displays the path and total distance.
 
-PathFinder provides the following features:
+6. **Persistence:**
+   - The graph state is serialized to a file (`graph.ser`) for persistent storage between program runs.
 
-1. *Route Planning*: Users can input a start and end location, and the application provides the best route based on various factors.
-2. *Location Search*: Users can search for specific locations, such as addresses, landmarks, businesses, etc.
-3. *Turn-by-Turn Navigation*: Provides turn-by-turn navigation instructions to guide the user to their destination.
-4. *Traffic Information*: Displays real-time traffic information, helping users anticipate delays and find alternative routes when necessary.
-5. *Public Transit Information*: Provides information about public transit options, including routes, schedules, and estimated travel times.
-6. *Points of Interest*: Highlights points of interest, such as restaurants, parks, museums, etc., in the map view.
-7. *Offline Access*: Provides an option to download maps for offline use in areas with poor internet connectivity.
+### Data Structures
 
-## Getting Started
+The Location Pathfinder employs the following data structures:
 
-(Include instructions on how to install and run your application here)
+- **LocationGraph:**
+  - Represents the map with an adjacency matrix to store distances between cities.
+  - Uses arrays to manage cities and their paths efficiently.
 
-## Contributing
+- **City:**
+  - Represents a city with a unique ID and a name.
 
-(Include instructions for contributors here)
+- **Path:**
+  - Represents a path between two cities with distance and availability information.
 
-## License
+### Getting Started
 
-(Include license information here)
+1. **Compile and Run:**
+   - Ensure you have Java installed on your machine.
+   - Compile and run the `Main` class to launch the Location Pathfinder.
+
+2. **Menu Options:**
+   - Follow the on-screen menu to interact with the application.
+   - Options include adding cities, adding paths, displaying the graph, removing cities, and finding the shortest path
