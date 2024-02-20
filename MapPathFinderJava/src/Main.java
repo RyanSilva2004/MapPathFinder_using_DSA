@@ -1,5 +1,7 @@
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.io.Serializable;
 
 public class Main {
     public static void main(String[] args) {
@@ -7,6 +9,9 @@ public class Main {
         System.out.println("Enter the number of cities:");
         int numCities = scanner.nextInt();
         LocationGraph graph = new LocationGraph(numCities);
+        loadSavedData(graph); // Load saved data if exists
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> saveData(graph)));
 
         while (true) {
             System.out.println("Enter 1 to add a city, 2 to add a path, 3 to display the graph, or 4 to exit:");
@@ -41,6 +46,27 @@ public class Main {
 
         scanner.close();
     }
+
+    private static void loadSavedData(LocationGraph graph) {
+        try (ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream("data.ser"))) {
+            ArrayList<City> cities = (ArrayList<City>) inputStream.readObject();
+            double[][] adjacencyMatrix = (double[][]) inputStream.readObject(); // Load adjacency matrix
+            graph.cities = cities; // Set the loaded cities
+            graph.setAdjacencyMatrix(adjacencyMatrix); // Set the loaded adjacency matrix
+        } catch (IOException | ClassNotFoundException e) {
+            // Ignore if file doesn't exist or error reading file
+        }
+    }
+
+    private static void saveData(LocationGraph graph) {
+        try (ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream("data.ser"))) {
+            outputStream.writeObject(graph.getCities());
+            outputStream.writeObject(graph.getAdjacencyMatrix()); // Save adjacency matrix
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 }
 
 //Map For Locations implemented using a Graph
@@ -64,29 +90,31 @@ class LocationGraph {
     public void removeCity(String cityId) {
         int index = findCityIndex(cityId);
         if (index != -1) {
-            // Create new adjacency matrix and cities list
-            double[][] newAdjacencyMatrix = new double[cities.size()-1][cities.size()-1];
-            ArrayList<City> newCities = new ArrayList<>();
-
-            // Copy over cities and distances, skipping the removed city
-            int newIndex = 0;
-            for (int i = 0; i < cities.size(); i++) {
-                if (i == index) continue;  // Skip the removed city
-                newCities.add(cities.get(i));
-                int newColumnIndex = 0;
+            // Remove the city from the adjacency matrix
+            for (int i = index; i < cities.size() - 1; i++) {
                 for (int j = 0; j < cities.size(); j++) {
-                    if (j == index) continue;  // Skip the removed city
-                    newAdjacencyMatrix[newIndex][newColumnIndex] = adjacencyMatrix[i][j];
-                    newColumnIndex++;
+                    adjacencyMatrix[i][j] = adjacencyMatrix[i + 1][j];
                 }
-                newIndex++;
             }
-
-            // Replace old adjacency matrix and cities list with new ones
+            for (int j = index; j < cities.size() - 1; j++) {
+                for (int i = 0; i < cities.size(); i++) {
+                    adjacencyMatrix[i][j] = adjacencyMatrix[i][j + 1];
+                }
+            }
+            // Resize the adjacency matrix
+            double[][] newAdjacencyMatrix = new double[cities.size() - 1][cities.size() - 1];
+            for (int i = 0; i < cities.size() - 1; i++) {
+                for (int j = 0; j < cities.size() - 1; j++) {
+                    newAdjacencyMatrix[i][j] = adjacencyMatrix[i][j];
+                }
+            }
             adjacencyMatrix = newAdjacencyMatrix;
-            cities = newCities;
+
+            // Remove the city from the cities list
+            cities.remove(index);
         }
     }
+
 
 
     public void addCity(City city) {
@@ -119,9 +147,19 @@ class LocationGraph {
             System.out.println();
         }
     }
+    public ArrayList<City> getCities() {
+        return cities;
+    }
+    public double[][] getAdjacencyMatrix() {
+        return adjacencyMatrix;
+    }
+
+    public void setAdjacencyMatrix(double[][] adjacencyMatrix) {
+        this.adjacencyMatrix = adjacencyMatrix;
+    }
 }
 
-class City {
+class City implements Serializable {
     String city_id;
     String city_name;
 
