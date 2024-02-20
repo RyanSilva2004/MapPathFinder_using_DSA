@@ -1,12 +1,20 @@
 import java.io.*;
 import java.util.*;
 
+class ShortestPathResult {
+    List<String> path;
+    double distance;
+
+    public ShortestPathResult(List<String> path, double distance) {
+        this.path = path;
+        this.distance = distance;
+    }
+}
+
 public class Main {
-    public static void main(String[] args)
-    {
+    public static void main(String[] args) {
         LocationGraph graph = loadGraph("graph.ser");
-        if (graph == null)
-        {
+        if (graph == null) {
             Scanner scanner = new Scanner(System.in);
             System.out.println("Welcome to the Location Pathfinder!");
             System.out.println("Enter the number of cities:");
@@ -15,13 +23,11 @@ public class Main {
         }
 
         Scanner scanner = new Scanner(System.in);
-        while (true)
-        {
+        while (true) {
             printMenu();
             int choice = scanner.nextInt();
             scanner.nextLine(); // consume newline left-over
-            switch (choice)
-            {
+            switch (choice) {
                 case 1:
                     addCity(graph, scanner);
                     saveGraph(graph, "graph.ser");
@@ -38,12 +44,15 @@ public class Main {
                     saveGraph(graph, "graph.ser");
                     break;
                 case 5:
+                    findShortestPath(graph, scanner);
+                    break;
+                case 6:
                     System.out.println("Thank you for using the Location Pathfinder. Goodbye!");
                     scanner.close();
                     System.exit(0);
                     break;
                 default:
-                    System.out.println("Invalid choice. Please enter a number between 1 and 5.");
+                    System.out.println("Invalid choice. Please enter a number between 1 and 6.");
             }
         }
     }
@@ -54,7 +63,8 @@ public class Main {
         System.out.println("2. Add a path");
         System.out.println("3. Display the graph");
         System.out.println("4. Remove a city");
-        System.out.println("5. Exit");
+        System.out.println("5. Find the shortest path between cities");
+        System.out.println("6. Exit");
         System.out.print("Enter your choice: ");
     }
 
@@ -103,24 +113,32 @@ public class Main {
         }
     }
 
-    private static LocationGraph loadGraph(String filename)
-    {
+    private static LocationGraph loadGraph(String filename) {
         LocationGraph graph = null;
-        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(filename)))
-        {
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(filename))) {
             graph = (LocationGraph) ois.readObject();
             System.out.println("Graph loaded successfully.");
-        }
-        catch (IOException | ClassNotFoundException e)
-        {
+        } catch (IOException | ClassNotFoundException e) {
             // e.printStackTrace(); // Uncomment this line if you want to print stack trace when the file doesn't exist
         }
         return graph;
     }
+
+    private static void findShortestPath(LocationGraph graph, Scanner scanner) {
+        System.out.println("----- Find Shortest Path -----");
+        System.out.println("Enter the ID of the start city:");
+        String startCityId = scanner.nextLine();
+        System.out.println("Enter the ID of the destination city:");
+        String endCityId = scanner.nextLine();
+
+        ShortestPathResult result = graph.shortestPathBetweenCities(startCityId, endCityId);
+        if (result != null) {
+            System.out.println("Shortest path between " + startCityId + " and " + endCityId + ":");
+            System.out.println("Path: " + String.join(" >> ", result.path));
+            System.out.println("Distance: " + result.distance);
+        }
+    }
 }
-
-
-// Map For Locations implemented using a Graph
 
 class LocationGraph implements Serializable {
     double[][] adjacencyMatrix;
@@ -138,6 +156,72 @@ class LocationGraph implements Serializable {
                 }
             }
         }
+    }
+
+    public ShortestPathResult shortestPathBetweenCities(String startCityId, String endCityId) {
+        int startIndex = findCityIndex(startCityId);
+        int endIndex = findCityIndex(endCityId);
+
+        if (startIndex == -1 || endIndex == -1) {
+            System.out.println("One or both cities not found.");
+            return null;
+        }
+
+        // Dijkstra's algorithm
+        double[] distances = new double[cities.length];
+        Arrays.fill(distances, Double.POSITIVE_INFINITY);
+        distances[startIndex] = 0;
+
+        boolean[] visited = new boolean[cities.length];
+
+        for (int count = 0; count < cities.length - 1; count++) {
+            int u = minDistance(distances, visited);
+            visited[u] = true;
+            for (int v = 0; v < cities.length; v++) {
+                if (!visited[v] && adjacencyMatrix[u][v] != Double.POSITIVE_INFINITY && distances[u] + adjacencyMatrix[u][v] < distances[v]) {
+                    distances[v] = distances[u] + adjacencyMatrix[u][v];
+                }
+            }
+        }
+
+        // Reconstruct path
+        List<String> path = new ArrayList<>();
+        int current = endIndex;
+        while (current != startIndex) {
+            path.add(cities[current].city_id);
+            current = findPreviousCity(distances, current);
+            if (current == -1) {
+                System.out.println("No path found between the cities.");
+                return null;
+            }
+        }
+        path.add(startCityId);
+        Collections.reverse(path);
+        return new ShortestPathResult(path, distances[endIndex]);
+    }
+
+    private int minDistance(double[] distances, boolean[] visited) {
+        double min = Double.POSITIVE_INFINITY;
+        int minIndex = -1;
+        for (int v = 0; v < cities.length; v++) {
+            if (!visited[v] && distances[v] <= min) {
+                min = distances[v];
+                minIndex = v;
+            }
+        }
+        return minIndex;
+    }
+
+    private int findPreviousCity(double[] distances, int current) {
+        double min = Double.POSITIVE_INFINITY;
+        int minIndex = -1;
+        for (int v = 0; v < cities.length; v++) {
+            if (adjacencyMatrix[current][v] != Double.POSITIVE_INFINITY && distances[v] < min) {
+                min = distances[v];
+                minIndex = v;
+            }
+        }
+        return minIndex;
     }
 
     public void removeCity(String cityId) {
@@ -187,12 +271,9 @@ class LocationGraph implements Serializable {
         }
     }
 
-    private int findCityIndex(String cityId)
-    {
+    private int findCityIndex(String cityId) {
         for (int i = 0; i < cities.length; i++) {
-
-            if (cities[i] != null && cities[i].city_id.equals(cityId))
-            {
+            if (cities[i] != null && cities[i].city_id.equals(cityId)) {
                 return i;
             }
         }
@@ -200,6 +281,7 @@ class LocationGraph implements Serializable {
     }
 
     public void display() {
+        System.out.println("Cities:");
         for (int i = 0; i < cities.length; i++) {
             for (int j = 0; j < cities.length; j++) {
                 System.out.print(adjacencyMatrix[i][j] + " ");
@@ -210,28 +292,24 @@ class LocationGraph implements Serializable {
 }
 
 
-class City implements Serializable
-{
+class City implements Serializable {
     String city_id;
     String city_name;
 
-    public City(String city_id, String city_name)
-    {
+    public City(String city_id, String city_name) {
         this.city_id = city_id;
         this.city_name = city_name;
     }
 }
 
-class Path implements Serializable
-{
+class Path implements Serializable {
     String path_id;
     City city1;
     City city2;
     double path_distance;
     boolean path_isAvailable;
 
-    public Path(City city1, City city2, double distance, boolean isAvailable)
-    {
+    public Path(City city1, City city2, double distance, boolean isAvailable) {
         this.city1 = city1;
         this.city2 = city2;
         this.path_distance = distance;
@@ -239,13 +317,11 @@ class Path implements Serializable
     }
 
     // Sets Path Availability
-    public void blockPath()
-    {
+    public void blockPath() {
         this.path_isAvailable = false;
     }
 
-    public void unblockPath()
-    {
+    public void unblockPath() {
         this.path_isAvailable = true;
     }
 }
