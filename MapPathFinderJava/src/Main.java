@@ -110,24 +110,17 @@ public class Main {
         return graph;
     }
 }
-class Node<T> implements Serializable{
-    T data;
-    Node<T> next;
 
-    Node(T data) {
-        this.data = data;
-    }
-}
 // Custom LinkedList implementation
-class MyLinkedList<T> implements Serializable {
-    Node<T> head;
+class MyLinkedList implements Serializable {
+    City head;
 
-    void add(T data) {
-        Node<T> newNode = new Node<>(data);
+    void add(String cityId, String cityName) {
+        City newNode = new City(cityId, cityName);
         if (head == null) {
             head = newNode;
         } else {
-            Node<T> current = head;
+            City current = head;
             while (current.next != null) {
                 current = current.next;
             }
@@ -135,17 +128,17 @@ class MyLinkedList<T> implements Serializable {
         }
     }
 
-    void remove(T data) {
+    void remove(String cityId) {
         if (head == null) return;
 
-        if (head.data.equals(data)) {
+        if (head.city_id.equals(cityId)) {
             head = head.next;
             return;
         }
 
-        Node<T> current = head;
+        City current = head;
         while (current.next != null) {
-            if (current.next.data.equals(data)) {
+            if (current.next.city_id.equals(cityId)) {
                 current.next = current.next.next;
                 return;
             }
@@ -153,10 +146,10 @@ class MyLinkedList<T> implements Serializable {
         }
     }
 
-    boolean contains(T data) {
-        Node<T> current = head;
+    boolean contains(String cityId) {
+        City current = head;
         while (current != null) {
-            if (current.data.equals(data)) {
+            if (current.city_id.equals(cityId)) {
                 return true;
             }
             current = current.next;
@@ -168,11 +161,13 @@ class MyLinkedList<T> implements Serializable {
 // Map For Locations implemented using a Graph
 class LocationGraph implements Serializable {
     double[][] adjacencyMatrix;
-    MyLinkedList<City> cities; // Changed ArrayList to MyLinkedList
+    MyLinkedList cities; // Changed ArrayList to MyLinkedList
+    int size;
 
     public LocationGraph(int numCities) {
         adjacencyMatrix = new double[numCities][numCities];
-        cities = new MyLinkedList<>(); // Changed ArrayList to MyLinkedList
+        cities = new MyLinkedList(); // Changed ArrayList to MyLinkedList
+        size = 0;
         for (int i = 0; i < numCities; i++) {
             for (int j = 0; j < numCities; j++) {
                 if (i == j) {
@@ -185,24 +180,54 @@ class LocationGraph implements Serializable {
     }
 
     public void removeCity(String cityId) {
-        Node<City> current = cities.head;
-        Node<City> prev = null;
-        while (current != null) {
-            if (current.data.city_id.equals(cityId)) {
-                if (prev == null) { // If the node to be removed is the head
-                    cities.head = current.next;
-                } else {
-                    prev.next = current.next;
+        if (cities.head == null) return;
+
+        // Find the index of the city to remove
+        int indexToRemove = findCityIndex(cityId);
+        if (indexToRemove == -1) return; // City not found
+
+        // Remove the city from the linked list
+        if (cities.head.city_id.equals(cityId)) {
+            cities.head = cities.head.next;
+            size--;
+        } else {
+            City current = cities.head;
+            while (current.next != null) {
+                if (current.next.city_id.equals(cityId)) {
+                    current.next = current.next.next;
+                    size--;
+                    break;
                 }
-                return;
+                current = current.next;
             }
-            prev = current;
-            current = current.next;
         }
+
+        // Remove the corresponding row and column from the adjacency matrix
+        for (int i = indexToRemove; i < size; i++) {
+            for (int j = 0; j < size; j++) {
+                adjacencyMatrix[i][j] = adjacencyMatrix[i + 1][j];
+            }
+        }
+        for (int j = indexToRemove; j < size; j++) {
+            for (int i = 0; i < size; i++) {
+                adjacencyMatrix[i][j] = adjacencyMatrix[i][j + 1];
+            }
+        }
+
+        // Remove all paths associated with the deleted city
+        for (int i = 0; i < size; i++) {
+            adjacencyMatrix[indexToRemove][i] = Double.POSITIVE_INFINITY;
+            adjacencyMatrix[i][indexToRemove] = Double.POSITIVE_INFINITY;
+        }
+
+        // Update the size of the adjacency matrix
+        size--;
     }
 
+
     public void addCity(City city) {
-        cities.add(city);
+        cities.add(city.city_id, city.city_name);
+        size++;
     }
 
     public void addPath(Path path) {
@@ -216,9 +241,9 @@ class LocationGraph implements Serializable {
 
     private int findCityIndex(String cityId) {
         int index = 0;
-        Node<City> current = cities.head;
+        City current = cities.head;
         while (current != null) {
-            if (current.data.city_id.equals(cityId)) {
+            if (current.city_id.equals(cityId)) {
                 return index;
             }
             current = current.next;
@@ -229,9 +254,9 @@ class LocationGraph implements Serializable {
 
     public void display() {
         System.out.println("Cities:");
-        Node<City> current = cities.head;
+        City current = cities.head;
         while (current != null) {
-            System.out.println(current.data.city_id + ": " + current.data.city_name);
+            System.out.println(current.city_id + ": " + current.city_name);
             current = current.next;
         }
         System.out.println("Adjacency Matrix:");
@@ -246,32 +271,28 @@ class LocationGraph implements Serializable {
             System.out.println();
         }
     }
-
-
 }
 
-class City implements Serializable
-{
+class City implements Serializable {
     String city_id;
     String city_name;
+    City next;
 
-    public City(String city_id, String city_name)
-    {
+    public City(String city_id, String city_name) {
         this.city_id = city_id;
         this.city_name = city_name;
+        this.next = null;
     }
 }
 
-class Path implements Serializable
-{
+class Path implements Serializable {
     String path_id;
     City city1;
     City city2;
     double path_distance;
     boolean path_isAvailable;
 
-    public Path(City city1, City city2, double distance, boolean isAvailable)
-    {
+    public Path(City city1, City city2, double distance, boolean isAvailable) {
         this.city1 = city1;
         this.city2 = city2;
         this.path_distance = distance;
@@ -279,13 +300,11 @@ class Path implements Serializable
     }
 
     // Sets Path Availability
-    public void blockPath()
-    {
+    public void blockPath() {
         this.path_isAvailable = false;
     }
 
-    public void unblockPath()
-    {
+    public void unblockPath() {
         this.path_isAvailable = true;
     }
 }
