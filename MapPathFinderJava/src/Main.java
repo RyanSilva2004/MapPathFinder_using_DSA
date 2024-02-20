@@ -64,10 +64,27 @@ class LocationGraph {
     public void removeCity(String cityId) {
         int index = findCityIndex(cityId);
         if (index != -1) {
+            // Create new adjacency matrix and cities list
+            double[][] newAdjacencyMatrix = new double[cities.size()-1][cities.size()-1];
+            ArrayList<City> newCities = new ArrayList<>();
+
+            // Copy over cities and distances, skipping the removed city
+            int newIndex = 0;
             for (int i = 0; i < cities.size(); i++) {
-                adjacencyMatrix[i][index] = -1;
-                adjacencyMatrix[index][i] = -1;
+                if (i == index) continue;  // Skip the removed city
+                newCities.add(cities.get(i));
+                int newColumnIndex = 0;
+                for (int j = 0; j < cities.size(); j++) {
+                    if (j == index) continue;  // Skip the removed city
+                    newAdjacencyMatrix[newIndex][newColumnIndex] = adjacencyMatrix[i][j];
+                    newColumnIndex++;
+                }
+                newIndex++;
             }
+
+            // Replace old adjacency matrix and cities list with new ones
+            adjacencyMatrix = newAdjacencyMatrix;
+            cities = newCities;
         }
     }
 
