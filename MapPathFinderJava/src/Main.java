@@ -61,6 +61,16 @@ class LocationGraph {
             }
         }
     }
+    public void removeCity(String cityId) {
+        int index = findCityIndex(cityId);
+        if (index != -1) {
+            for (int i = 0; i < cities.size(); i++) {
+                adjacencyMatrix[i][index] = -1;
+                adjacencyMatrix[index][i] = -1;
+            }
+        }
+    }
+
 
     public void addCity(City city) {
         cities.add(city);
