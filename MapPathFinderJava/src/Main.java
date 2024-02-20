@@ -1,20 +1,20 @@
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Scanner;
-import java.io.Serializable;
 
 public class Main {
     public static void main(String[] args) {
+        LocationGraph graph = loadGraph("graph.ser"); // Load graph when the program starts
+        if (graph == null) {
+            Scanner scanner = new Scanner(System.in);
+            System.out.println("Enter the number of cities:");
+            int numCities = scanner.nextInt();
+            graph = new LocationGraph(numCities);
+        }
+
         Scanner scanner = new Scanner(System.in);
-        System.out.println("Enter the number of cities:");
-        int numCities = scanner.nextInt();
-        LocationGraph graph = new LocationGraph(numCities);
-        loadSavedData(graph); // Load saved data if exists
-
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> saveData(graph)));
-
         while (true) {
-            System.out.println("Enter 1 to add a city, 2 to add a path, 3 to display the graph, or 4 to exit:");
+            System.out.println("Enter 1 to add a city, 2 to add a path, 3 to display the graph, 4 to remove a city, or 5 to exit:");
             int choice = scanner.nextInt();
             scanner.nextLine(); // consume newline left-over
             if (choice == 1) {
@@ -24,6 +24,7 @@ public class Main {
                 String cityName = scanner.nextLine();
                 City city = new City(cityId, cityName);
                 graph.addCity(city);
+                saveGraph(graph, "graph.ser"); // Save graph after adding a city
             } else if (choice == 2) {
                 System.out.println("Enter the first city ID:");
                 String cityId1 = scanner.nextLine();
@@ -37,9 +38,15 @@ public class Main {
                 boolean isAvailable = isAvailableStr.equalsIgnoreCase("yes");
                 Path path = new Path(new City(cityId1, ""), new City(cityId2, ""), distance, isAvailable);
                 graph.addPath(path);
+                saveGraph(graph, "graph.ser"); // Save graph after adding a path
             } else if (choice == 3) {
                 graph.display();
             } else if (choice == 4) {
+                System.out.println("Enter the city ID to remove:");
+                String cityId = scanner.nextLine();
+                graph.removeCity(cityId);
+                saveGraph(graph, "graph.ser"); // Save graph after removing a city
+            } else if (choice == 5) {
                 break;
             }
         }
@@ -47,30 +54,29 @@ public class Main {
         scanner.close();
     }
 
-    private static void loadSavedData(LocationGraph graph) {
-        try (ObjectInputStream inputStream = new ObjectInputStream(new FileInputStream("data.ser"))) {
-            ArrayList<City> cities = (ArrayList<City>) inputStream.readObject();
-            double[][] adjacencyMatrix = (double[][]) inputStream.readObject(); // Load adjacency matrix
-            graph.cities = cities; // Set the loaded cities
-            graph.setAdjacencyMatrix(adjacencyMatrix); // Set the loaded adjacency matrix
-        } catch (IOException | ClassNotFoundException e) {
-            // Ignore if file doesn't exist or error reading file
-        }
-    }
-
-    private static void saveData(LocationGraph graph) {
-        try (ObjectOutputStream outputStream = new ObjectOutputStream(new FileOutputStream("data.ser"))) {
-            outputStream.writeObject(graph.getCities());
-            outputStream.writeObject(graph.getAdjacencyMatrix()); // Save adjacency matrix
+    private static void saveGraph(LocationGraph graph, String filename) {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filename))) {
+            oos.writeObject(graph);
+            System.out.println("Graph saved successfully.");
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
+    private static LocationGraph loadGraph(String filename) {
+        LocationGraph graph = null;
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(filename))) {
+            graph = (LocationGraph) ois.readObject();
+            System.out.println("Graph loaded successfully.");
+        } catch (IOException | ClassNotFoundException e) {
+            // e.printStackTrace(); // Uncomment this line if you want to print stack trace when the file doesn't exist
+        }
+        return graph;
+    }
 }
 
-//Map For Locations implemented using a Graph
-class LocationGraph {
+// Map For Locations implemented using a Graph
+class LocationGraph implements Serializable {
     double[][] adjacencyMatrix;
     ArrayList<City> cities;
 
@@ -87,35 +93,33 @@ class LocationGraph {
             }
         }
     }
+
     public void removeCity(String cityId) {
         int index = findCityIndex(cityId);
         if (index != -1) {
-            // Remove the city from the adjacency matrix
-            for (int i = index; i < cities.size() - 1; i++) {
-                for (int j = 0; j < cities.size(); j++) {
-                    adjacencyMatrix[i][j] = adjacencyMatrix[i + 1][j];
-                }
-            }
-            for (int j = index; j < cities.size() - 1; j++) {
-                for (int i = 0; i < cities.size(); i++) {
-                    adjacencyMatrix[i][j] = adjacencyMatrix[i][j + 1];
-                }
-            }
-            // Resize the adjacency matrix
-            double[][] newAdjacencyMatrix = new double[cities.size() - 1][cities.size() - 1];
-            for (int i = 0; i < cities.size() - 1; i++) {
-                for (int j = 0; j < cities.size() - 1; j++) {
-                    newAdjacencyMatrix[i][j] = adjacencyMatrix[i][j];
-                }
-            }
-            adjacencyMatrix = newAdjacencyMatrix;
+            // Create new adjacency matrix and cities list
+            double[][] newAdjacencyMatrix = new double[cities.size()-1][cities.size()-1];
+            ArrayList<City> newCities = new ArrayList<>();
 
-            // Remove the city from the cities list
-            cities.remove(index);
+            // Copy over cities and distances, skipping the removed city
+            int newIndex = 0;
+            for (int i = 0; i < cities.size(); i++) {
+                if (i == index) continue;  // Skip the removed city
+                newCities.add(cities.get(i));
+                int newColumnIndex = 0;
+                for (int j = 0; j < cities.size(); j++) {
+                    if (j == index) continue;  // Skip the removed city
+                    newAdjacencyMatrix[newIndex][newColumnIndex] = adjacencyMatrix[i][j];
+                    newColumnIndex++;
+                }
+                newIndex++;
+            }
+
+            // Replace old adjacency matrix and cities list with new ones
+            adjacencyMatrix = newAdjacencyMatrix;
+            cities = newCities;
         }
     }
-
-
 
     public void addCity(City city) {
         cities.add(city);
@@ -147,16 +151,6 @@ class LocationGraph {
             System.out.println();
         }
     }
-    public ArrayList<City> getCities() {
-        return cities;
-    }
-    public double[][] getAdjacencyMatrix() {
-        return adjacencyMatrix;
-    }
-
-    public void setAdjacencyMatrix(double[][] adjacencyMatrix) {
-        this.adjacencyMatrix = adjacencyMatrix;
-    }
 }
 
 class City implements Serializable {
@@ -169,7 +163,7 @@ class City implements Serializable {
     }
 }
 
-class Path {
+class Path implements Serializable {
     String path_id;
     City city1;
     City city2;
@@ -183,7 +177,7 @@ class Path {
         this.path_isAvailable = isAvailable;
     }
 
-    //Sets Path Availability
+    // Sets Path Availability
     public void blockPath() {
         this.path_isAvailable = false;
     }
