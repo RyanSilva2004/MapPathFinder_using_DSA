@@ -3,11 +3,10 @@ import java.util.*;
 
 class ShortestPathResult
 {
-    List<String> path;
+    CustomQueue path;
     double distance;
 
-    public ShortestPathResult(List<String> path, double distance)
-    {
+    public ShortestPathResult(CustomQueue path, double distance) {
         this.path = path;
         this.distance = distance;
     }
@@ -151,8 +150,14 @@ public class Main {
 
         if (result != null) {
             System.out.println("Shortest path between " + startCityId + " and " + endCityId + ":");
-            System.out.println("Path: " + String.join(" >> ", result.path));
-            System.out.println("Distance: " + result.distance);
+            CustomQueue path = result.path;
+            while (!path.isEmpty()) {
+                System.out.print(path.dequeue());
+                if (!path.isEmpty()) {
+                    System.out.print(" >> ");
+                }
+            }
+            System.out.println("\nDistance: " + result.distance);
         }
     }
 }
@@ -182,11 +187,13 @@ class LocationGraph implements Serializable
         }
     }
 
-    public ShortestPathResult shortestPathBetweenCities(String startCityId, String endCityId) {
+    public ShortestPathResult shortestPathBetweenCities(String startCityId, String endCityId)
+    {
         int startIndex = findCityIndex(startCityId);
         int endIndex = findCityIndex(endCityId);
 
-        if (startIndex == -1 || endIndex == -1) {
+        if (startIndex == -1 || endIndex == -1)
+        {
             System.out.println("One or both cities not found.");
             return null;
         }
@@ -212,25 +219,19 @@ class LocationGraph implements Serializable
         }
 
         // Reconstruct path
-        int pathLength = 1; // Initialize to 1 to include the start city
+        CustomQueue path = new CustomQueue();
         int current = endIndex;
         while (current != startIndex) {
-            pathLength++;
+            path.enqueue(cities[current].city_id);
             current = previousCities[current];
             if (current == -1) {
                 System.out.println("No path found between the cities.");
                 return null;
             }
         }
+        path.enqueue(startCityId);
 
-        String[] pathArray = new String[pathLength];
-        current = endIndex;
-        for (int i = pathLength - 1; i >= 0; i--) {
-            pathArray[i] = cities[current].city_id;
-            current = previousCities[current];
-        }
-
-        return new ShortestPathResult(Arrays.asList(pathArray), distances[endIndex]);
+        return new ShortestPathResult(path, distances[endIndex]);
     }
 
 
@@ -396,8 +397,10 @@ class CustomQueue
         front = rear = size = 0;
     }
 
-    public void enqueue(String element) {
-        if (size == MAX_SIZE) {
+    public void enqueue(String element)
+    {
+        if (size == MAX_SIZE)
+        {
             System.out.println("Queue is full. Cannot enqueue.");
             return;
         }
@@ -408,7 +411,8 @@ class CustomQueue
 
     public String dequeue()
     {
-        if (isEmpty()) {
+        if (isEmpty())
+        {
             System.out.println("Queue is empty. Cannot dequeue.");
             return null;
         }
@@ -423,4 +427,3 @@ class CustomQueue
         return size == 0;
     }
 }
-
