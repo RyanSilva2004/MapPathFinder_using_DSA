@@ -137,7 +137,8 @@ public class Main {
         return graph;
     }
 
-    private static void findShortestPath(LocationGraph graph, Scanner scanner) {
+    private static void findShortestPath(LocationGraph graph, Scanner scanner)
+    {
         System.out.println("----- Find Shortest Path -----");
         System.out.println("Enter the ID of the start city:");
         String startCityId = scanner.nextLine();
@@ -170,11 +171,13 @@ public class Main {
 class LocationGraph implements Serializable
 {
     double[][] adjacencyMatrix;
+    boolean[][] graphPathsAvailable;
     City[] cities;
 
     public LocationGraph(int numCities)
     {
         adjacencyMatrix = new double[numCities][numCities];
+        graphPathsAvailable = new boolean[numCities][numCities]; // Add this line
         cities = new City[numCities];
         for (int i = 0; i < numCities; i++)
         {
@@ -192,13 +195,11 @@ class LocationGraph implements Serializable
         }
     }
 
-    public ShortestPathResult shortestPathBetweenCities(String startCityId, String endCityId)
-    {
+    public ShortestPathResult shortestPathBetweenCities(String startCityId, String endCityId) {
         int startIndex = findCityIndex(startCityId);
         int endIndex = findCityIndex(endCityId);
 
-        if (startIndex == -1 || endIndex == -1)
-        {
+        if (startIndex == -1 || endIndex == -1) {
             System.out.println("One or both cities not found.");
             return null;
         }
@@ -215,8 +216,10 @@ class LocationGraph implements Serializable
         for (int count = 0; count < cities.length - 1; count++) {
             int u = minDistance(distances, visited);
             visited[u] = true;
+
             for (int v = 0; v < cities.length; v++) {
-                if (!visited[v] && adjacencyMatrix[u][v] != Double.POSITIVE_INFINITY && distances[u] + adjacencyMatrix[u][v] < distances[v]) {
+                if (!visited[v] && adjacencyMatrix[u][v] != Double.POSITIVE_INFINITY &&
+                        distances[u] + adjacencyMatrix[u][v] < distances[v] && isPathAvailable(u, v)) {
                     distances[v] = distances[u] + adjacencyMatrix[u][v];
                     previousCities[v] = u; // Update the previous city for v
                 }
@@ -238,6 +241,14 @@ class LocationGraph implements Serializable
 
         return new ShortestPathResult(path, distances[endIndex]);
     }
+
+    private boolean isPathAvailable(int u, int v) {
+        // Check if the path between cities u and v is available
+        return adjacencyMatrix[u][v] != Double.POSITIVE_INFINITY &&
+                adjacencyMatrix[v][u] != Double.POSITIVE_INFINITY &&
+                graphPathsAvailable[u][v] && graphPathsAvailable[v][u];
+    }
+
 
 
     private int minDistance(double[] distances, boolean[] visited)
@@ -317,10 +328,12 @@ class LocationGraph implements Serializable
     {
         int index1 = findCityIndex(path.city1.city_id);
         int index2 = findCityIndex(path.city2.city_id);
-        if (index1 != -1 && index2 != -1)
+        if (index1 != -1 && index2 != -1 && path.path_isAvailable)
         {
             adjacencyMatrix[index1][index2] = path.path_distance;
             adjacencyMatrix[index2][index1] = path.path_distance;
+            graphPathsAvailable[index1][index2] = true;
+            graphPathsAvailable[index2][index1] = true;
         }
     }
 
