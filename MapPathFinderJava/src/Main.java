@@ -6,13 +6,15 @@ class ShortestPathResult
     CustomQueue path;
     double distance;
 
-    public ShortestPathResult(CustomQueue path, double distance) {
+    public ShortestPathResult(CustomQueue path, double distance)
+    {
         this.path = path;
         this.distance = distance;
     }
 }
 
-public class Main {
+public class Main
+{
     public static void main(String[] args)
     {
         LocationGraph graph = loadGraph("graph.ser");
@@ -137,8 +139,7 @@ public class Main {
         return graph;
     }
 
-    private static void findShortestPath(LocationGraph graph, Scanner scanner)
-    {
+    private static void findShortestPath(LocationGraph graph, Scanner scanner) {
         System.out.println("----- Find Shortest Path -----");
         System.out.println("Enter the ID of the start city:");
         String startCityId = scanner.nextLine();
@@ -163,8 +164,44 @@ public class Main {
             }
 
             System.out.println("\nDistance: " + result.distance);
+
+            // Ask if the user wants to start the journey
+            System.out.println("Do you want to start the journey? (yes/no)");
+            String startJourneyResponse = scanner.nextLine().toLowerCase();
+
+            if (startJourneyResponse.equals("yes")) {
+                // Start the journey
+                System.out.println("\nStarting the journey...");
+                double remainingDistance = result.distance;
+                for (int i = 0; i < pathArray.length - 1; i++) {
+                    String currentCity = pathArray[i];
+                    String nextCity = pathArray[i + 1];
+                    double distanceToNextCity = graph.distanceBetweenCities(currentCity, nextCity);
+
+                    System.out.println("Crossing through " + currentCity + " - " +
+                            "Remaining distance: " + remainingDistance);
+
+                    // Prompt to continue to the next city
+                    System.out.println("Do you want to continue to " + nextCity + "? (yes/no)");
+                    String continueResponse = scanner.nextLine().toLowerCase();
+
+                    if (continueResponse.equals("no")) {
+                        System.out.println("Journey stopped at " + currentCity);
+                        break;
+                    }
+
+                    remainingDistance -= distanceToNextCity;
+                }
+
+                // Arrived at the destination
+                System.out.println("You have reached your destination: " + endCityId);
+            } else {
+                System.out.println("Journey not started. Exiting...");
+            }
         }
     }
+
+
 
 }
 
@@ -195,7 +232,21 @@ class LocationGraph implements Serializable
         }
     }
 
-    public ShortestPathResult shortestPathBetweenCities(String startCityId, String endCityId) {
+    public double distanceBetweenCities(String cityId1, String cityId2)
+    {
+        int index1 = findCityIndex(cityId1);
+        int index2 = findCityIndex(cityId2);
+
+        if (index1 == -1 || index2 == -1) {
+            System.out.println("One or both cities not found.");
+            return Double.POSITIVE_INFINITY; // or throw an exception, depending on your design
+        }
+
+        return adjacencyMatrix[index2][index1]; // Reverse the order for distance retrieval
+    }
+
+    public ShortestPathResult shortestPathBetweenCities(String startCityId, String endCityId)
+    {
         int startIndex = findCityIndex(startCityId);
         int endIndex = findCityIndex(endCityId);
 
@@ -270,8 +321,10 @@ class LocationGraph implements Serializable
     {
         double min = Double.POSITIVE_INFINITY;
         int minIndex = -1;
-        for (int v = 0; v < cities.length; v++) {
-            if (adjacencyMatrix[current][v] != Double.POSITIVE_INFINITY && distances[v] < min) {
+        for (int v = 0; v < cities.length; v++)
+        {
+            if (adjacencyMatrix[current][v] != Double.POSITIVE_INFINITY && distances[v] < min)
+            {
                 min = distances[v];
                 minIndex = v;
             }
