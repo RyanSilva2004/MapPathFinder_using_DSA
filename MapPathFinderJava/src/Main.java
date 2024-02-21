@@ -137,7 +137,8 @@ public class Main {
         return graph;
     }
 
-    private static void findShortestPath(LocationGraph graph, Scanner scanner) {
+    private static void findShortestPath(LocationGraph graph, Scanner scanner)
+    {
         System.out.println("----- Find Shortest Path -----");
         System.out.println("Enter the ID of the start city:");
         String startCityId = scanner.nextLine();
@@ -149,22 +150,16 @@ public class Main {
 
         if (result != null) {
             System.out.println("Shortest path between " + startCityId + " and " + endCityId + ":");
-
             CustomQueue path = result.path;
-
-            // Display the path without dequeueing, starting from the front
-            String[] pathArray = path.toArray();
-            for (int i = pathArray.length - 1; i >= 0; i--) {
-                System.out.print(pathArray[i]);
-                if (!pathArray[i].equals(endCityId)) {
+            while (!path.isEmpty()) {
+                System.out.print(path.dequeue());
+                if (!path.isEmpty()) {
                     System.out.print(" >> ");
                 }
             }
-
             System.out.println("\nDistance: " + result.distance);
         }
     }
-
 }
 
 class LocationGraph implements Serializable
@@ -431,17 +426,4 @@ class CustomQueue
     {
         return size == 0;
     }
-
-    // In CustomQueue class
-    public String[] toArray() {
-        String[] result = new String[size];
-        int index = 0;
-        int i = front;
-        while (index < size) {
-            result[index++] = array[i];
-            i = (i + 1) % MAX_SIZE;
-        }
-        return result;
-    }
-
 }
