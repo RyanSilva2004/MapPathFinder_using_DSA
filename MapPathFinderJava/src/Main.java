@@ -384,3 +384,43 @@ class Path implements Serializable
         this.path_isAvailable = true;
     }
 }
+
+class CustomQueue
+{
+    private static final int MAX_SIZE = 100; // Adjust the size as needed
+    private String[] array;
+    private int front, rear, size;
+
+    public CustomQueue() {
+        array = new String[MAX_SIZE];
+        front = rear = size = 0;
+    }
+
+    public void enqueue(String element) {
+        if (size == MAX_SIZE) {
+            System.out.println("Queue is full. Cannot enqueue.");
+            return;
+        }
+        array[rear] = element;
+        rear = (rear + 1) % MAX_SIZE;
+        size++;
+    }
+
+    public String dequeue()
+    {
+        if (isEmpty()) {
+            System.out.println("Queue is empty. Cannot dequeue.");
+            return null;
+        }
+        String element = array[front];
+        front = (front + 1) % MAX_SIZE;
+        size--;
+        return element;
+    }
+
+    public boolean isEmpty()
+    {
+        return size == 0;
+    }
+}
+
