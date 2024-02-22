@@ -81,7 +81,7 @@ public class Main
     {
         System.out.println("----- Menu -----");
         System.out.println("1. Add a city");
-        System.out.println("2. Add a path");
+        System.out.println("2. Add/Update a path");
         System.out.println("3. Display the graph");
         System.out.println("4. Remove a city");
         System.out.println("5. Find the shortest path between cities");
@@ -176,61 +176,51 @@ public class Main
         String startCityId = scanner.nextLine();
         System.out.println("Enter the ID of the destination city:");
         String endCityId = scanner.nextLine();
-
         System.out.println("Applying Dijkstra's Algorithm...");
         ShortestPathResult result = graph.shortestPathBetweenCities(startCityId, endCityId);
-
         if (result != null) {
-            System.out.println("Shortest path between " + startCityId + " and " + endCityId + ":");
-
+            System.out.println("Shortest path between " + graph.getCityName(startCityId) + " and " +
+                    graph.getCityName(endCityId) + ":");
             CustomQueue path = result.path;
-
-            // Display the path without dequeueing, starting from the front
             String[] pathArray = path.toArray();
-            for (int i = pathArray.length - 1; i >= 0; i--) {
-                System.out.print(pathArray[i]);
+
+            for(int i = pathArray.length - 1; i >= 0; --i) {
+                System.out.print(graph.getCityName(pathArray[i]));
                 if (!pathArray[i].equals(endCityId)) {
                     System.out.print(" >> ");
                 }
             }
 
             System.out.println("\nDistance: " + result.distance);
-
-            // Ask if the user wants to start the journey
             System.out.println("Do you want to start the journey? (yes/no)");
             String startJourneyResponse = scanner.nextLine().toLowerCase();
-
             if (startJourneyResponse.equals("yes")) {
-                // Start the journey
                 System.out.println("\nStarting the journey...");
                 double remainingDistance = result.distance;
-                for (int i = 0; i < pathArray.length - 1; i++) {
+
+                for (int i = pathArray.length - 2; i >= 0; --i) {
                     String currentCity = pathArray[i];
                     String nextCity = pathArray[i + 1];
                     double distanceToNextCity = graph.distanceBetweenCities(currentCity, nextCity);
-
-                    System.out.println("Crossing through " + currentCity + " - " +
-                            "Remaining distance: " + remainingDistance);
-
-                    // Prompt to continue to the next city
-                    System.out.println("Do you want to continue to " + nextCity + "? (yes/no)");
+                    System.out.println("Crossing through " + graph.getCityName(currentCity) + " - Remaining distance: " + remainingDistance);
+                    System.out.println("Do you want to continue to " + graph.getCityName(nextCity) + "? (yes/no)");
                     String continueResponse = scanner.nextLine().toLowerCase();
-
                     if (continueResponse.equals("no")) {
-                        System.out.println("Journey stopped at " + currentCity);
+                        System.out.println("Journey stopped at " + graph.getCityName(currentCity));
                         break;
                     }
 
                     remainingDistance -= distanceToNextCity;
                 }
 
-                // Arrived at the destination
-                System.out.println("You have reached your destination: " + endCityId);
+
+                System.out.println("You have reached your destination: " + graph.getCityName(endCityId));
             } else {
                 System.out.println("Journey not started. Exiting...");
             }
         }
     }
+
 
 
 
@@ -460,6 +450,15 @@ class LocationGraph implements Serializable
             System.out.println();
         }
     }
+    public String getCityName(String cityId) {
+        for (City city : cities) {
+            if (city != null && city.city_id.equals(cityId)) {
+                return city.city_name;
+            }
+        }
+        return "City Name Not Found";
+    }
+
 }
 
 
@@ -477,7 +476,7 @@ class City implements Serializable
 
 class Path implements Serializable
 {
-    String path_id;
+    String path_name;
     City city1;
     City city2;
     double path_distance;
