@@ -19,10 +19,24 @@ public class Main
     {
         LocationGraph graph = loadGraph("graph.ser");
         if (graph == null) {
+            // Create a new graph if loading fails
             Scanner scanner = new Scanner(System.in);
-            System.out.println("Welcome to the Location Pathfinder!");
-            System.out.println("Enter the number of cities:");
-            int numCities = scanner.nextInt();
+            int numCities;
+            do {
+                System.out.println("Welcome to the Location Pathfinder!");
+                System.out.println("Enter the number of cities:");
+                while (!scanner.hasNextInt()) {
+                    System.out.println("Invalid input. Please enter the Number of Cities:");
+                    scanner.next(); // Consume the invalid input
+                }
+                numCities = scanner.nextInt();
+                scanner.nextLine(); // Consume newline left-over
+                if (numCities <= 0) {
+                    System.out.println("Number of cities must be greater than 0. Please enter the Number of Cities:");
+                }
+            } while (numCities <= 0);
+
+            // Create a new graph with the specified number of cities
             graph = new LocationGraph(numCities);
         }
 
@@ -96,6 +110,7 @@ public class Main
         System.out.println("City added successfully!");
     }
 
+
     private static void addPath(LocationGraph graph, Scanner scanner)
     {
         System.out.println("----- Add a Path -----");
@@ -114,11 +129,18 @@ public class Main
         System.out.println("Path added successfully!");
     }
 
-    private static void removeCity(LocationGraph graph, Scanner scanner)
-    {
+    private static void removeCity(LocationGraph graph, Scanner scanner) {
         System.out.println("----- Remove a City -----");
         System.out.println("Enter the city ID to remove:");
         String cityId = scanner.nextLine();
+
+        // Check if the city ID exists in the graph
+        if (!graph.isCityIdExist(cityId)) {
+            System.out.println("City ID does not exist. Please enter a valid city ID.");
+            return;
+        }
+
+        // Remove the city if it exists
         graph.removeCity(cityId);
         System.out.println("City removed successfully!");
     }
@@ -247,6 +269,14 @@ class LocationGraph implements Serializable
             }
         }
         return true; // City ID is unique
+    }
+    public boolean isCityIdExist(String cityId) {
+        for (City city : cities) {
+            if (city != null && city.city_id.equals(cityId)) {
+                return true;
+            }
+        }
+        return false;
     }
     public double distanceBetweenCities(String cityId1, String cityId2)
     {
