@@ -79,7 +79,16 @@ public class Main
     {
         System.out.println("----- Add a City -----");
         System.out.println("Enter the city ID:");
-        String cityId = scanner.nextLine();
+        String cityId;
+        boolean isUnique;
+        do {
+            cityId = scanner.nextLine();
+            isUnique = graph.isCityIdUnique(cityId);
+            if (!isUnique) {
+                System.out.println("City ID already exists. Please enter a unique city ID:");
+            }
+        } while (!isUnique);
+
         System.out.println("Enter the city name:");
         String cityName = scanner.nextLine();
         City city = new City(cityId, cityName);
@@ -231,7 +240,14 @@ class LocationGraph implements Serializable
             }
         }
     }
-
+    public boolean isCityIdUnique(String cityId) {
+        for (City city : cities) {
+            if (city != null && city.city_id.equals(cityId)) {
+                return false; // City ID already exists
+            }
+        }
+        return true; // City ID is unique
+    }
     public double distanceBetweenCities(String cityId1, String cityId2)
     {
         int index1 = findCityIndex(cityId1);
